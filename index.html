@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MSN Messenger - AFPA Mode</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tahoma:wght@400;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --msn-blue: #0067B8;
+    --msn-titlebar-top: #6DB0FF;
+    --msn-titlebar-bot: #0050C0;
+    --msn-bg: #ECE9D8;
+    --msn-border: #0054E3;
+    --msn-font: 'Tahoma', 'MS Sans Serif', sans-serif;
+  }
+  body {
+    font-family: var(--msn-font);
+    font-size: 11px;
+    background: #5A7BA8;
+    min-height: 100vh;
+    padding: 10px;
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .window {
+    background: var(--msn-bg);
+    border: 1px solid #003BB5;
+    border-radius: 6px 6px 0 0;
+    box-shadow: 1px 1px 0 #89C4F4 inset, -1px -1px 0 #0054A0 inset, 3px 3px 10px rgba(0,0,0,0.6);
+    overflow: hidden;
+    font-family: var(--msn-font);
+    font-size: 11px;
+  }
+  .titlebar {
+    background: linear-gradient(to bottom, var(--msn-titlebar-top) 0%, var(--msn-titlebar-bot) 100%);
+    padding: 3px 5px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 24px; cursor: default;
+  }
+  .titlebar-left { display: flex; align-items: center; gap: 4px; }
+  .titlebar-icon { font-size: 12px; line-height: 14px; }
+  .titlebar-title { color: white; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
+  .titlebar-buttons { display: flex; gap: 2px; }
+  .win-btn {
+    width: 18px; height: 15px; border-radius: 3px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: bold; color: white;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.35), rgba(255,255,255,0.1));
+    border: 1px solid rgba(255,255,255,0.4);
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+  }
+  .win-btn:hover { background: linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,0.25)); }
+  .win-btn.close { background: linear-gradient(to bottom, #E06060, #C00000); }
+  .win-btn.close:hover { background: linear-gradient(to bottom, #FF7070, #E00000); }
+
+  .menubar { background: var(--msn-bg); border-bottom: 1px solid #ACA899; padding: 1px 2px; display: flex; }
+  .menu-item { padding: 2px 7px; border-radius: 2px; cursor: pointer; color: #000; font-size: 11px; }
+  .menu-item:hover { background: #316AC5; color: white; }
+
+  /* CONTACT LIST */
+  .contact-list-window { width: 230px; }
+  .my-info {
+    background: linear-gradient(135deg, #C8DEFF 0%, #9EC8F0 50%, #BDD8FF 100%);
+    border-bottom: 1px solid #89C4F4;
+    padding: 8px 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .my-avatar {
+    width: 38px; height: 38px; border: 2px solid #0067B8; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; background: linear-gradient(135deg, #FFE4B5, #FFD08A);
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.2), 1px 1px 3px rgba(0,0,0,0.3);
+  }
+  .my-name { font-size: 12px; font-weight: bold; color: #003399; }
+  .my-status-txt { font-size: 10px; color: #005599; margin-top: 1px; }
+
+  .search-bar {
+    background: white; border-bottom: 1px solid #ACA899;
+    padding: 3px 6px; display: flex; align-items: center; gap: 4px;
+  }
+  .search-bar input {
+    flex: 1; border: 1px solid #7F9DB9; padding: 1px 4px;
+    font-family: var(--msn-font); font-size: 10px; outline: none; background: white;
+  }
+
+  .contacts-scroll { overflow-y: auto; max-height: 380px; background: white; }
+  .contact-group-header {
+    background: linear-gradient(to bottom, #EAE7D7, #D4CEB9);
+    border-bottom: 1px solid #B8B4A0; border-top: 1px solid #D0CCB8;
+    padding: 2px 8px; font-size: 10px; font-weight: bold; color: #333;
+    cursor: pointer; display: flex; align-items: center; gap: 4px;
+  }
+  .contact-item {
+    padding: 5px 10px; display: flex; align-items: center; gap: 7px;
+    cursor: pointer; position: relative;
+  }
+  .contact-item:hover { background: linear-gradient(to bottom, #D6E4FF, #B8CEF0); }
+  .contact-item.has-unread { background: #FFF8E0; }
+  .contact-item.has-unread:hover { background: #FFEE99; }
+  .unread-badge {
+    background: #FF4444; color: white; border-radius: 8px; padding: 0 4px;
+    font-size: 9px; font-weight: bold; min-width: 14px; text-align: center;
+    margin-left: auto; display: none;
+  }
+  .contact-item.has-unread .unread-badge { display: inline; }
+  .contact-name { flex: 1; }
+  .contact-mood { font-size: 10px; color: #888; font-style: italic; }
+
+  .status-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.25); flex-shrink: 0;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .status-online { background: radial-gradient(circle at 35% 35%, #40D040, #00A000); }
+  .status-away { background: radial-gradient(circle at 35% 35%, #FFE040, #FFA000); }
+  .status-busy { background: radial-gradient(circle at 35% 35%, #FF6060, #CC0000); }
+
+  .cl-footer {
+    background: linear-gradient(to bottom, #E4E1D4, #D0CCBC);
+    border-top: 1px solid #ACA899; padding: 4px 8px;
+    display: flex; align-items: center; gap: 8px; font-size: 10px; color: #555;
+  }
+
+  /* CHAT AREA */
+  .chat-area { display: flex; flex-wrap: wrap; gap: 8px; margin-left: 8px; align-items: flex-start; }
+
+  .chat-window { width: 390px; display: flex; flex-direction: column; }
+  .chat-window.active-nudge { animation: shake 0.5s ease; }
+
+  .chat-header {
+    background: linear-gradient(135deg, #DDEEFF, #A8C8EE);
+    border-bottom: 1px solid #89C4F4; padding: 6px 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .chat-avatar {
+    width: 42px; height: 42px; border: 2px solid #0067B8; border-radius: 3px;
+    font-size: 24px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #FFE4B5, #FFD08A);
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  }
+  .chat-contact-name { font-weight: bold; font-size: 12px; color: #003399; }
+  .chat-contact-status { font-size: 10px; color: #005599; }
+
+  .chat-toolbar {
+    background: var(--msn-bg); border-bottom: 1px solid #ACA899;
+    padding: 2px 4px; display: flex; gap: 2px; align-items: center;
+  }
+  .toolbar-btn {
+    padding: 2px 6px; font-size: 10px; cursor: pointer;
+    border: 1px solid transparent; border-radius: 2px; background: transparent;
+    font-family: var(--msn-font); display: flex; align-items: center; gap: 3px;
+  }
+  .toolbar-btn:hover { background: linear-gradient(to bottom, #fff, #E4E1D4); border-color: #ACA899; }
+  .toolbar-sep { width: 1px; background: #ACA899; height: 16px; margin: 0 2px; }
+
+  .font-bar {
+    background: var(--msn-bg); border-bottom: 1px solid #ACA899;
+    padding: 3px 6px; display: flex; gap: 3px; align-items: center;
+  }
+  .font-select {
+    font-family: var(--msn-font); font-size: 10px;
+    border: 1px solid #7F9DB9; padding: 1px 2px; background: white; cursor: pointer;
+  }
+  .fmt-btn {
+    width: 18px; height: 17px; border: 1px solid #ACA899;
+    background: linear-gradient(to bottom, #fff, #ECE9D8);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: bold;
+  }
+  .fmt-btn:hover { background: linear-gradient(to bottom, #D6E4FF, #B8CEF0); }
+
+  .chat-display {
+    height: 220px; background: white; overflow-y: auto;
+    padding: 6px 8px; border-bottom: 1px solid #ACA899;
+    scroll-behavior: smooth;
+  }
+  .chat-msg { margin-bottom: 4px; line-height: 1.4; animation: msgIn 0.15s ease; }
+  .chat-msg-name { font-weight: bold; }
+  .chat-msg-name.me { color: #0000CC; }
+  .chat-msg-name.them { color: #AA0000; }
+  .chat-msg-time { color: #999; font-size: 9px; }
+  .msg-sys {
+    color: #888; font-style: italic; font-size: 10px; text-align: center;
+    margin: 4px 0; padding: 2px; background: #FAFAFA;
+    border-top: 1px solid #EEE; border-bottom: 1px solid #EEE;
+  }
+
+  .typing-indicator {
+    background: #FFFDE0; border-top: 1px solid #E8E0A0;
+    padding: 2px 8px; font-size: 10px; color: #AA8800;
+    font-style: italic; min-height: 18px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .typing-dots span {
+    display: inline-block; animation: bounce 1.2s infinite; font-style: normal;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  .nudge-bar {
+    background: #FFF3D0; border-top: 1px solid #FFB347;
+    padding: 3px 8px; font-size: 10px; color: #CC6600;
+    text-align: center; display: none;
+  }
+  .nudge-bar.show { display: block; }
+
+  .chat-input-wrap { padding: 4px; background: var(--msn-bg); }
+  .chat-input {
+    width: 100%; height: 54px; border: 1px solid #7F9DB9; padding: 4px 6px;
+    font-family: var(--msn-font); font-size: 11px; resize: none; outline: none; background: white;
+  }
+  .chat-input:focus { border-color: #0067B8; }
+
+  .chat-btns {
+    display: flex; justify-content: flex-end; align-items: center;
+    padding: 2px 4px 4px; background: var(--msn-bg); gap: 6px;
+  }
+  .send-btn {
+    padding: 3px 14px; font-family: var(--msn-font); font-size: 11px;
+    border: 1px solid #7F9DB9;
+    background: linear-gradient(to bottom, #FFFFFF, #ECE9D8);
+    cursor: pointer; border-radius: 2px;
+  }
+  .send-btn:hover { background: linear-gradient(to bottom, #D6E4FF, #B8CEF0); border-color: #0067B8; }
+  .char-count { font-size: 9px; color: #999; }
+
+  /* SCROLLBAR */
+  .contacts-scroll::-webkit-scrollbar, .chat-display::-webkit-scrollbar { width: 8px; }
+  .contacts-scroll::-webkit-scrollbar-track, .chat-display::-webkit-scrollbar-track { background: #E4E1D4; }
+  .contacts-scroll::-webkit-scrollbar-thumb, .chat-display::-webkit-scrollbar-thumb { background: #B0AEAD; border: 1px solid #9A9794; }
+
+  /* WINK */
+  .wink-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center; z-index: 9999;
+  }
+  .wink-overlay.show { display: flex; }
+  .wink-box {
+    background: var(--msn-bg); border: 2px solid var(--msn-border);
+    border-radius: 6px; padding: 20px; text-align: center;
+    font-size: 48px; box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translate(0,0); }
+    10%,50%,90% { transform: translate(-6px,2px); }
+    20%,60%,80% { transform: translate(6px,-2px); }
+    30%,70% { transform: translate(-4px,0); }
+    40% { transform: translate(4px,0); }
+  }
+  @keyframes bounce {
+    0%,80%,100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-3px); opacity: 1; }
+  }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- CONTACT LIST -->
+<div class="window contact-list-window">
+  <div class="titlebar">
+    <div class="titlebar-left">
+      <div class="titlebar-icon">🦋</div>
+      <span class="titlebar-title">MSN Messenger</span>
+    </div>
+    <div class="titlebar-buttons">
+      <div class="win-btn">_</div><div class="win-btn">□</div>
+      <div class="win-btn close">✕</div>
+    </div>
+  </div>
+  <div class="menubar">
+    <div class="menu-item">Fichier</div>
+    <div class="menu-item">Contacts</div>
+    <div class="menu-item">Outils</div>
+    <div class="menu-item">Aide</div>
+  </div>
+  <div class="my-info">
+    <div class="my-avatar">😎</div>
+    <div>
+      <div class="my-name">Moi (En ligne)</div>
+      <div class="my-status-txt">✨ AFPA Mode — Vous allez y arriver l'équipe DWWM 2026</div>
+    </div>
+  </div>
+  <div class="search-bar">
+    <span>🔍</span>
+    <input type="text" placeholder="Rechercher un contact..." oninput="filterContacts(this.value)">
+  </div>
+  <div class="contacts-scroll" id="contactsScroll">
+    <div class="contact-group-header">▾ En ligne (8)</div>
+    <div class="contact-item" id="ci-Sabrina" onclick="openChat('Sabrina 🌸','😊','en train de mettre à jour son Skyblog')">
+      <div class="status-dot status-online"></div>
+      <div><div class="contact-name">Sabrina 🌸</div><div class="contact-mood">✨ en train de mettre à jour son Skyblog</div></div>
+      <div class="unread-badge" id="badge-Sabrina"></div>
+    </div>
+    <div class="contact-item" id="ci-Alexis" onclick="openChat('Alexis du 85','😜','xoxo bisous sur le pied (K)')">
+      <div class="status-dot status-online"></div>
+      <div><div class="contact-name">Alexis du 85</div><div class="contact-mood">xoxo bisous sur le pied (K)</div></div>
+      <div class="unread-badge" id="badge-Alexis"></div>
+    </div>
+    <div class="contact-item" id="ci-Rohid" onclick="openChat('Rohid 🏈','🏃','Time is money !')">
+      <div class="status-dot status-online"></div>
+      <div><div class="contact-name">Rohid 🏈</div><div class="contact-mood">Time is money !</div></div>
+      <div class="unread-badge" id="badge-Rohid"></div>
+    </div>
+    <div class="contact-item" id="ci-Alexandre" onclick="openChat('Alexandre','👨‍💻','En train de carry la team')">
+      <div class="status-dot status-online"></div>
+      <div><div class="contact-name">Alexandre</div><div class="contact-mood">En train de carry la team</div></div>
+      <div class="unread-badge" id="badge-Alexandre"></div>
+    </div>
+    <div class="contact-item" id="ci-Mathieu" onclick="openChat('Mathieu','👨‍💻','Skyrock FM dans les oreilles')">
+      <div class="status-dot status-online"></div>
+      <div><div class="contact-name">Mathieu</div><div class="contact-mood">Skyrock FM dans les oreilles 🎵</div></div>
+      <div class="unread-badge" id="badge-Mathieu"></div>
+    </div>
+    <div class="contact-item" id="ci-Camil" onclick="openChat('Camil','👨‍💻','En train de configurer le réseau...')">
+      <div class="status-dot status-online"></div>
+      <div><div class="contact-name">Camil</div><div class="contact-mood">En train de configurer le réseau...</div></div>
+      <div class="unread-badge" id="badge-Camil"></div>
+    </div>
+    <div class="contact-item" id="ci-Issintya" onclick="openChat('Issintya','👩‍💻','Elle gère trop sur Codem')">
+      <div class="status-dot status-online"></div>
+      <div><div class="contact-name">Issintya</div><div class="contact-mood">Elle gère trop sur Codem</div></div>
+      <div class="unread-badge" id="badge-Issintya"></div>
+    </div>
+    <div class="contact-item" id="ci-Guillaume" onclick="openChat('Guillaume','👨‍💻','Dernier commit poussé ✓')">
+      <div class="status-dot status-online"></div>
+      <div><div class="contact-name">Guillaume</div><div class="contact-mood">Dernier commit poussé ✓</div></div>
+      <div class="unread-badge" id="badge-Guillaume"></div>
+    </div>
+    <div class="contact-group-header">▾ Occupé (1)</div>
+    <div class="contact-item" id="ci-Stéphane" onclick="openChat('Stéphane','👨‍🏫','Occupé — en train de corriger des bugs')">
+      <div class="status-dot status-busy"></div>
+      <div><div class="contact-name">Stéphane</div><div class="contact-mood">Occupé — correction de bugs</div></div>
+      <div class="unread-badge" id="badge-Stéphane"></div>
+    </div>
+    <div class="contact-group-header">▾ Absent (1)</div>
+    <div class="contact-item" id="ci-Laurence" onclick="openChat('Laurence','👩‍🏫','Absente — réunion pédagogique')">
+      <div class="status-dot status-away"></div>
+      <div><div class="contact-name">Laurence</div><div class="contact-mood">Absente — réunion pédagogique</div></div>
+      <div class="unread-badge" id="badge-Laurence"></div>
+    </div>
+  </div>
+  <div class="cl-footer">
+    <div class="status-dot status-online"></div>
+    <span>En ligne · 10 contacts</span>
+  </div>
+</div>
+
+<!-- CHAT WINDOWS -->
+<div class="chat-area" id="chatArea"></div>
+
+<!-- WINK OVERLAY -->
+<div class="wink-overlay" id="winkOverlay" onclick="this.classList.remove('show')">
+  <div class="wink-box">😜<br><span style="font-size:14px;font-family:Tahoma">Wink reçu !</span></div>
+</div>
+
+<script>
+// ===== AUDIO =====
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playSound(type) {
+  try {
+    const ctx = getCtx();
+    if (type === 'msg') {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(880, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.1);
+      g.gain.setValueAtTime(0.3, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      o.start(); o.stop(ctx.currentTime + 0.25);
+    } else if (type === 'nudge') {
+      [0, 0.06, 0.12, 0.18, 0.24].forEach((t, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'square'; o.frequency.value = 200 + (i%2)*150;
+        g.gain.setValueAtTime(0.15, ctx.currentTime+t);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+t+0.05);
+        o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+0.06);
+      });
+    } else if (type === 'open') {
+      [440,550,660].forEach((f,i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.2, ctx.currentTime+i*0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.1+0.15);
+        o.start(ctx.currentTime+i*0.1); o.stop(ctx.currentTime+i*0.1+0.16);
+      });
+    } else if (type === 'wink') {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(520, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(900, ctx.currentTime+0.15);
+      g.gain.setValueAtTime(0.25, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.3);
+      o.start(); o.stop(ctx.currentTime+0.3);
+    }
+  } catch(e) {}
+}
+document.addEventListener('click', () => getCtx(), {once:true});
+
+// ===== STATE =====
+const chats = {};
+
+const smartReplies = {
+  "sabrina":["T'as vu son Skyblog ? Trop de paillettes ! ✨","Sabrina elle est trop la best (L)","Elle adore les asperges apparemment mdrr"],
+  "rohid":["Ouiii exactement ! Rohid a raison (H)","Rohid est encore en train de manger des frites ?","Time is money comme dit Rohid !"],
+  "alexis":["xoxo bisous sur le pied d'Alexis (K)","Alexis est trop un pro du code","Va demander un tuto à Alexis, il flex trop."],
+  "stéphane":["Demande à Stéphane, c'est lui qui sait.","Stéphane m'a dit que t'étais un noob :P","Il est en train de corriger ton code là, prépare-toi..."],
+  "alexandre":["Alexandre il est encore en train de carry la team sur CS ?","Il a déjà fini l'exercice, lui.","Alexandre il code plus vite que son ombre (H)"],
+  "mathieu":["Mathieu il est bloqué en 2006 avec sa playlist Skyrock FM","T'as vu son statut ? Toujours 'Occupé' ce mec.","Il est en train de configurer son Winamp là."],
+  "camil":["C'est Camil qui a réparé ma box, maintenant ça va trop vite !","Il est en train de coder un nouveau MSN en cachette.","Wizz Camil ! Réveille-toi un peu :P"],
+  "issintya":["Issintya a dit que ton code c'est du spam mdrrr","Heureusement qu'Issintya est là pour nous aider (L)","Elle gère trop sur Codem."],
+  "guillaume":["Guillaume il nous montre plein de choses cool","T'as vu le dernier commit de Guillaume ? C'est propre.","Guillaume il cherche encore le bug dans ton cerveau lol"],
+  "laurence":["Laurence elle a déjà fini tous les exercices, on est des escargots","Demande à Laurence, elle gère grave l'admin (H)","Laurence elle regarde ton écran là, fais attention !"],
+  "noob":["C'est toi le noob mdrrr","T'as l'humour d'une grenouille, demande à Stéphane.","Arrête de coder avec tes pieds :P"],
+  "salut":["Cc ! ASL ? lol","Wizz ! Ça va ?","Slt ! T'es encore en pause ?"],
+  "grenouille":["Pourquoi les grenouilles ont toujours les fesses dans l'eau ? :P","C'est pour avoir la raie-nette !"],
+  "code":["Ctrl+Z c'est ton meilleur ami (H)","T'as essayé d'éteindre et de rallumer ? :P","Stack Overflow va te sauver, comme d'hab."],
+  "aide":["Demande à Stéphane, il sait tout.","Google est ton ami !","Moi j'ai rien compris non plus lol"],
+  "merci":["De rien (H)","C'est normal !!","Trop facile 😎"],
+  "afpa":["L'AFPA c'est cool, mais mon PC rame de ouf.","C'est l'heure de la pause ? J'ai faim.","On est pas là pour enfiler des perles !"]
+};
+const fallback = [
+  "C'est pour avoir la raie-nette ! (K)","Je suis trop d'accord lol",
+  "Attends j'appelle Camil en visio","Demande à Mathieu, il a la réponse",
+  "WIZZZZZZ ! (H)","Dsl je bug, ma connexion 56k est lente :S",
+  "T'as pas un nouveau GIF pour ton avatar ?","Mdrrr j'avoue.",
+  "Attends je suis en train de bouffer","Oui mais nan mais oui mais nan"
+];
+
+function getReply(text) {
+  const low = text.toLowerCase();
+  for (const k in smartReplies) {
+    if (low.includes(k)) {
+      const arr = smartReplies[k];
+      return arr[Math.floor(Math.random()*arr.length)];
+    }
+  }
+  return fallback[Math.floor(Math.random()*fallback.length)];
+}
+
+function getKey(name) {
+  return name.replace(/[^a-zA-ZéàèÉÀÈ]/g,'').split('').slice(0,10).join('');
+}
+
+// ===== OPEN CHAT =====
+function openChat(name, avatar, statusTxt) {
+  const key = getKey(name);
+  if (!chats[key]) chats[key] = {history:[], unread:0, typingTimer:null};
+  chats[key].unread = 0;
+  updateBadge(key);
+
+  if (document.getElementById('chat-'+key)) {
+    document.getElementById('input-'+key).focus();
+    return;
+  }
+  playSound('open');
+
+  const win = document.createElement('div');
+  win.className = 'window chat-window';
+  win.id = 'chat-'+key;
+  win.innerHTML = `
+    <div class="titlebar">
+      <div class="titlebar-left"><div class="titlebar-icon">💬</div><span class="titlebar-title">${name}</span></div>
+      <div class="titlebar-buttons">
+        <div class="win-btn" onclick="minimizeChat('${key}')">_</div>
+        <div class="win-btn close" onclick="closeChat('${key}')">✕</div>
+      </div>
+    </div>
+    <div class="chat-header">
+      <div class="chat-avatar">${avatar}</div>
+      <div><div class="chat-contact-name">${name}</div><div class="chat-contact-status">${statusTxt}</div></div>
+    </div>
+    <div class="chat-toolbar">
+      <button class="toolbar-btn" onclick="sendNudge('${key}','${name}')">🔔 Nudge</button>
+      <div class="toolbar-sep"></div>
+      <button class="toolbar-btn" onclick="sendWink('${key}','${name}')">😜 Wink</button>
+      <div class="toolbar-sep"></div>
+      <button class="toolbar-btn" onclick="insertEmoji('${key}','(H)')">😎</button>
+      <button class="toolbar-btn" onclick="insertEmoji('${key}','(L)')">❤️</button>
+      <button class="toolbar-btn" onclick="insertEmoji('${key}',':P')">😛</button>
+      <button class="toolbar-btn" onclick="insertEmoji('${key}',':)')">🙂</button>
+      <button class="toolbar-btn" onclick="insertEmoji('${key}','(K)')">💋</button>
+      <button class="toolbar-btn" onclick="insertEmoji('${key}','(Y)')">👍</button>
+    </div>
+    <div class="font-bar">
+      <select class="font-select"><option>Tahoma</option><option>Comic Sans MS</option><option>Arial</option><option>Times New Roman</option></select>
+      <select class="font-select" style="width:36px"><option>10</option><option selected>11</option><option>12</option><option>14</option></select>
+      <button class="fmt-btn" style="font-weight:bold" title="Gras">B</button>
+      <button class="fmt-btn" style="font-style:italic" title="Italique">I</button>
+      <button class="fmt-btn" style="text-decoration:underline" title="Souligné">U</button>
+    </div>
+    <div class="chat-display" id="display-${key}"></div>
+    <div class="typing-indicator" id="typing-${key}"></div>
+    <div class="nudge-bar" id="nudgebar-${key}">🔔 <strong>${name}</strong> t'a envoyé un Nudge !</div>
+    <div class="chat-input-wrap">
+      <textarea class="chat-input" id="input-${key}" placeholder="Écris ton message ici…" onkeydown="handleKey(event,'${key}','${name}')"></textarea>
+    </div>
+    <div class="chat-btns">
+      <span class="char-count" id="chars-${key}">0 / 400</span>
+      <button class="send-btn" onclick="sendMsg('${key}','${name}')">Envoyer</button>
+    </div>
+  `;
+  document.getElementById('chatArea').appendChild(win);
+
+  const inp = document.getElementById('input-'+key);
+  inp.addEventListener('input', () => {
+    document.getElementById('chars-'+key).textContent = inp.value.length + ' / 400';
+  });
+
+  const display = document.getElementById('display-'+key);
+  chats[key].history.forEach(m => renderMsg(display, m.who, m.text, m.isMe, m.time));
+
+  if (chats[key].history.length === 0) {
+    const welcomes = {
+      'Stéphane': "Alors le noob, on galère encore ? :P",
+      'Sabrina': "T'as vu ma nouvelle photo de profil ? (L)",
+      'Alexis': "Ça flex de ouf ici, bienvenue (H)",
+      'Laurence': "J'espère que t'as fini tes exercices ! 👀",
+    };
+    const n = name.split(' ')[0];
+    const welcome = welcomes[n] || "Salut ! Ça va ? :)";
+    setTimeout(() => addMsg(key, name, welcome, false), 600);
+  }
+  inp.focus();
+}
+
+function closeChat(key) {
+  const w = document.getElementById('chat-'+key);
+  if (w) w.remove();
+}
+
+function minimizeChat(key) {
+  const d = document.getElementById('display-'+key);
+  if (d) d.style.display = d.style.display === 'none' ? '' : 'none';
+}
+
+// ===== MESSAGES =====
+function renderMsg(display, who, text, isMe, time) {
+  const d = document.createElement('div');
+  d.className = 'chat-msg';
+  d.innerHTML = `<span class="chat-msg-time">(${time})</span> <span class="chat-msg-name ${isMe?'me':'them'}">${isMe?'Moi':who} :</span> <span>${text}</span>`;
+  display.appendChild(d);
+  display.scrollTop = display.scrollHeight;
+}
+
+function ts() {
+  const n = new Date();
+  return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+}
+
+function addMsg(key, who, text, isMe) {
+  if (!chats[key]) chats[key] = {history:[], unread:0, typingTimer:null};
+  const t = ts();
+  chats[key].history.push({who, text, isMe, time:t});
+
+  const display = document.getElementById('display-'+key);
+  if (display) {
+    renderMsg(display, who, text, isMe, t);
+    if (!isMe) playSound('msg');
+  } else if (!isMe) {
+    chats[key].unread++;
+    updateBadge(key);
+  }
+
+  if (isMe) {
+    clearTimeout(chats[key].typingTimer);
+    showTyping(key, who);
+    chats[key].typingTimer = setTimeout(() => {
+      hideTyping(key);
+      addMsg(key, who, getReply(text), false);
+    }, 1200 + Math.random()*900);
+  }
+}
+
+function sendMsg(key, name) {
+  const inp = document.getElementById('input-'+key);
+  const val = inp.value.trim();
+  if (!val) return;
+  addMsg(key, name, val, true);
+  inp.value = '';
+  document.getElementById('chars-'+key).textContent = '0 / 400';
+}
+
+function handleKey(e, key, name) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(key, name); }
+}
+
+function showTyping(key, name) {
+  const el = document.getElementById('typing-'+key);
+  if (el) el.innerHTML = `<span>${name} est en train d'écrire</span><span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>`;
+}
+function hideTyping(key) {
+  const el = document.getElementById('typing-'+key);
+  if (el) el.innerHTML = '';
+}
+
+// ===== NUDGE =====
+function sendNudge(key, name) {
+  const win = document.getElementById('chat-'+key);
+  const bar = document.getElementById('nudgebar-'+key);
+  if (!win) return;
+  playSound('nudge');
+  win.classList.add('active-nudge');
+  if (bar) bar.classList.add('show');
+  addMsg(key, 'Système', `🔔 Tu as envoyé un Nudge à ${name} !`, true);
+  setTimeout(() => {
+    win.classList.remove('active-nudge');
+    if (bar) bar.classList.remove('show');
+  }, 1200);
+}
+
+// ===== WINK =====
+function sendWink(key, name) {
+  playSound('wink');
+  document.getElementById('winkOverlay').classList.add('show');
+  addMsg(key, 'Système', `😜 Tu as envoyé un Wink à ${name} !`, true);
+  setTimeout(() => document.getElementById('winkOverlay').classList.remove('show'), 2000);
+}
+
+// ===== EMOJI =====
+function insertEmoji(key, emoji) {
+  const inp = document.getElementById('input-'+key);
+  if (!inp) return;
+  const pos = inp.selectionStart;
+  inp.value = inp.value.slice(0,pos) + emoji + inp.value.slice(pos);
+  inp.selectionStart = inp.selectionEnd = pos + emoji.length;
+  inp.focus();
+}
+
+// ===== BADGE =====
+function updateBadge(key) {
+  const badge = document.getElementById('badge-'+key);
+  const ci = document.getElementById('ci-'+key);
+  if (!badge || !ci) return;
+  const n = chats[key]?.unread || 0;
+  badge.textContent = n;
+  badge.style.display = n > 0 ? 'inline' : 'none';
+  ci.classList.toggle('has-unread', n > 0);
+}
+
+// ===== FILTER =====
+function filterContacts(q) {
+  document.querySelectorAll('.contact-item').forEach(el => {
+    const name = el.querySelector('.contact-name')?.textContent.toLowerCase() || '';
+    el.style.display = name.includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
